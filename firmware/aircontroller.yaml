@@ -1,0 +1,57 @@
+# M5Stack ATOM Lite + Unit IR (U002) -> Toshiba RAS-2214T (remote RG10J5(B3H)/BGJ)
+#
+# The IR test buttons live in ir_test_buttons.yaml (generated from protocol/; do not edit by hand).
+# Secrets (wifi_ssid, wifi_password, api_encryption_key, ap_password) go in secrets.yaml next to this file.
+# If your existing device YAML has extra settings (fallback AP, OTA password, ...), keep them and
+# just add the `packages:` block below.
+
+esphome:
+  name: aircontroller
+  friendly_name: aircontroller
+
+esp32:
+  variant: esp32
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+packages:
+  ir_tests: !include ir_test_buttons.yaml
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "Aircontroller Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+
+# Unit IR receiver. With Unit IR taped onto the AC's receiver it also picks up its own
+# transmissions, so "Received Toshiba AC: ..." after a test button shows what was actually sent.
+remote_receiver:
+  pin:
+    number: GPIO32
+    inverted: true
+  dump:
+    - pronto
+    - toshiba_ac
+
+# Unit IR transmitter (NOT GPIO12, which is the ATOM Lite's built-in IR LED).
+remote_transmitter:
+  pin: GPIO26
+  carrier_duty_percent: 50%
+  non_blocking: true # ESPHome default; set explicitly to silence the 2026.x warning
+
+web_server:
+  port: 80
+  version: 3

@@ -1,0 +1,6 @@
+# ESPHome
+secrets.yaml
+.esphome/
+
+# Node
+node_modules/

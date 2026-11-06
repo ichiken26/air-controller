@@ -1,0 +1,23 @@
+{
+  "name": "@air-controller/protocol",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Toshiba RAS-2214T / RG10J5(B3H)/BGJ IR protocol encoder (hardware independent)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --no-warnings --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "esphome-yaml": "node --experimental-strip-types --no-warnings scripts/esphome-yaml.ts",
+    "esphome-test-package": "node --experimental-strip-types --no-warnings scripts/esphome-test-package.ts"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "typescript": "5.9.3"
+  }
+}
