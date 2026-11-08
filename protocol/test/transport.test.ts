@@ -18,7 +18,7 @@ describe('AirConditionerRemote', () => {
   it('transmits nothing for unsupported commands', async () => {
     const transmitter = new RecordingTransmitter();
     const remote = new AirConditionerRemote(transmitter, MEASURED_RG10J5);
-    await assert.rejects(remote.send({ kind: 'run', mode: 'cool', temperature: 25, fan: 'auto' }), UnsupportedCommandError);
+    await assert.rejects(remote.send({ kind: 'run', mode: 'cool', temperature: 31, fan: 'auto' }), UnsupportedCommandError);
     assert.equal(transmitter.sent.length, 0);
   });
 });

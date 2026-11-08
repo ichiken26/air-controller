@@ -3,8 +3,8 @@
 //
 // Groups (each one answers a different question when pressed with Unit IR on the receiver):
 //   A  Captured replay: the remote's own Pronto, as received.     -> Does this operation work at all?
-//   B  Encoder, verified: encode() output, every value captured.  -> Does our encoder match the remote?
-//   C  Encoder, candidates: ESPHome RAS-2819T values not captured. -> Is the candidate value right?
+//   B  Encoder, verified: captured or checked-on-device values.  -> Does our encoder still work?
+//   C  Encoder, candidates: not yet checked on the AC.            -> Is the candidate right?
 // A works but B fails => encoder or timing bug. B works but C fails => candidate value is wrong.
 
 import { toHex } from '../bits.ts';
@@ -25,8 +25,8 @@ export interface TestButton {
 
 export const GROUP_TITLES: Readonly<Record<TestGroup, string>> = {
   A: 'A 実測リプレイ（純正リモコンのPronto）',
-  B: 'B エンコーダー（実測済みの値）',
-  C: 'C エンコーダー（ESPHome表由来・要検証）',
+  B: 'B エンコーダー（確認済みの値）',
+  C: 'C エンコーダー（未確認の候補）',
 };
 
 export interface TestPackageOptions {

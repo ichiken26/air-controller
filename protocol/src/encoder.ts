@@ -6,6 +6,7 @@ import {
   FIXED_COMMANDS,
   HALF_DEGREE_FLAG,
   HALF_DEGREE_MODES,
+  MAX_TEMPERATURE,
   MODE_NIBBLES,
   PAIR_FRAME_REPEAT,
   STATE_HEADER,
@@ -91,6 +92,7 @@ function splitTemperature(mode: TemperatureMode, celsius: number, allow: boolean
   if (half && !HALF_DEGREE_MODES.includes(mode)) {
     throw new UnsupportedCommandError(`half-degree setting in mode "${mode}" has not been captured`);
   }
+  if (celsius > MAX_TEMPERATURE) throw new UnsupportedCommandError(`temperature above ${MAX_TEMPERATURE}°C: ${celsius}`);
   const table = temperatureCodes(allow);
   const entry = table.find((t) => t.celsius === whole);
   if (!entry) {
@@ -103,5 +105,6 @@ function splitTemperature(mode: TemperatureMode, celsius: number, allow: boolean
 /** Temperatures accepted by encode() for a mode. */
 export function supportedTemperatures(mode: TemperatureMode, options: EncodeOptions = {}): number[] {
   const halves = HALF_DEGREE_MODES.includes(mode);
-  return temperatureCodes(options.allowCandidates ?? false).flatMap((t) => (halves ? [t.celsius, t.celsius + 0.5] : [t.celsius]));
+  return temperatureCodes(options.allowCandidates ?? false).flatMap((t) => (halves ? [t.celsius, t.celsius + 0.5] : [t.celsius]))
+    .filter((t) => t <= MAX_TEMPERATURE);
 }
