@@ -1,0 +1,42 @@
+{
+	"name": "air-controller-web",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"imports": {
+		"#lib": "./src/lib/index.ts",
+		"#lib/*": "./src/lib/*",
+		"#styled-system/*": "./styled-system/*/index.js"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "panda codegen && vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync && panda codegen",
+		"check": "svelte-kit sync && panda codegen && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test:unit": "vitest",
+		"test": "npm run test:unit -- --run",
+		"start": "node build"
+	},
+	"devDependencies": {
+		"@air-controller/protocol": "file:../protocol",
+		"@lucide/svelte": "^1.70.0",
+		"@pandacss/dev": "^2.5.0",
+		"@pandacss/preset-base": "^2.5.0",
+		"@pandacss/preset-panda": "^2.5.0",
+		"@sveltejs/adapter-node": "^6.0.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/node": "^22",
+		"dseg": "^0.46.0",
+		"svelte": "^5.57.2",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.3.0",
+		"vitest": "^4.1.8"
+	},
+	"engines": {
+		"node": ">=22.17"
+	}
+}
