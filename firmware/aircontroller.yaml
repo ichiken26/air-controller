@@ -3,7 +3,19 @@
 # The IR test buttons live in ir_test_buttons.yaml (generated from protocol/; do not edit by hand).
 # Secrets (wifi_ssid, wifi_password, api_encryption_key, ap_password) go in secrets.yaml next to this file.
 # If your existing device YAML has extra settings (fallback AP, OTA password, ...), keep them and
-# just add the `packages:` block below.
+# just add the `substitutions:`, `packages:`, `id: ir_tx` and `text:` parts below.
+
+# Waveform used by the "ir_frames" text entity. Must equal protocol/src/timing.ts MEASURED_RG10J5
+# (checked by protocol/test/firmware.test.ts).
+substitutions:
+  ir_carrier_hz: "38000"
+  ir_header_mark_us: "4418"
+  ir_header_space_us: "4470"
+  ir_bit_mark_us: "500"
+  ir_zero_space_us: "579"
+  ir_one_space_us: "1657"
+  ir_end_mark_us: "500"
+  ir_frame_gap_us: "5312"
 
 esphome:
   name: aircontroller
@@ -37,7 +49,7 @@ wifi:
 captive_portal:
 
 # Unit IR receiver. With Unit IR taped onto the AC's receiver it also picks up its own
-# transmissions, so "Received Toshiba AC: ..." after a test button shows what was actually sent.
+# transmissions, so "Received Toshiba AC: ..." after a send shows what was actually sent.
 remote_receiver:
   pin:
     number: GPIO32
@@ -48,6 +60,7 @@ remote_receiver:
 
 # Unit IR transmitter (NOT GPIO12, which is the ATOM Lite's built-in IR LED).
 remote_transmitter:
+  id: ir_tx
   pin: GPIO26
   carrier_duty_percent: 50%
   non_blocking: true # ESPHome default; set explicitly to silence the 2026.x warning
@@ -55,3 +68,65 @@ remote_transmitter:
 web_server:
   port: 80
   version: 3
+
+# Entry point for the web app (web/): it POSTs
+#   /text/ir_frames/set?value=<seq>:<frame>,<frame>[,<frame>]
+# where each frame is 12 hex digits (6 bytes) from protocol/ encode(). <seq> changes on every
+# send so that sending the same command twice still triggers on_value.
+text:
+  - platform: template
+    id: ir_frames
+    name: "ir_frames"
+    icon: mdi:remote
+    mode: text
+    max_length: 100
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            const std::string &value = x;
+            const size_t colon = value.find(':');
+            const std::string body = colon == std::string::npos ? value : value.substr(colon + 1);
+            std::vector<std::array<uint8_t, 6>> frames;
+            size_t pos = 0;
+            while (true) {
+              const size_t comma = body.find(',', pos);
+              const std::string hex = body.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+              if (hex.size() != 12) {
+                ESP_LOGW("ir_frames", "rejected: frame '%s' is not 12 hex digits", hex.c_str());
+                return;
+              }
+              std::array<uint8_t, 6> frame{};
+              for (size_t i = 0; i < 6; i++) {
+                const char hi = hex[i * 2], lo = hex[i * 2 + 1];
+                if (!isxdigit(static_cast<unsigned char>(hi)) || !isxdigit(static_cast<unsigned char>(lo))) {
+                  ESP_LOGW("ir_frames", "rejected: frame '%s' has a non-hex digit", hex.c_str());
+                  return;
+                }
+                frame[i] = static_cast<uint8_t>(strtoul(hex.substr(i * 2, 2).c_str(), nullptr, 16));
+              }
+              frames.push_back(frame);
+              if (comma == std::string::npos) break;
+              pos = comma + 1;
+            }
+            if (frames.size() > 4) {
+              ESP_LOGW("ir_frames", "rejected: %u frames (max 4)", static_cast<unsigned>(frames.size()));
+              return;
+            }
+            auto call = id(ir_tx).transmit();
+            auto *data = call.get_data();
+            data->set_carrier_frequency(${ir_carrier_hz});
+            for (const auto &frame : frames) {
+              data->mark(${ir_header_mark_us});
+              data->space(${ir_header_space_us});
+              for (const uint8_t byte : frame) {
+                for (int bit = 7; bit >= 0; bit--) {
+                  data->mark(${ir_bit_mark_us});
+                  data->space(((byte >> bit) & 1) ? ${ir_one_space_us} : ${ir_zero_space_us});
+                }
+              }
+              data->mark(${ir_end_mark_us});
+              data->space(${ir_frame_gap_us});
+            }
+            call.perform();
+            ESP_LOGI("ir_frames", "sent %u frames: %s", static_cast<unsigned>(frames.size()), body.c_str());

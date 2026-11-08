@@ -5,7 +5,8 @@
   "description": "Toshiba RAS-2214T / RG10J5(B3H)/BGJ IR protocol encoder (hardware independent)",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./esphome": "./src/adapters/esphome.ts"
   },
   "engines": {
     "node": ">=22.6"
