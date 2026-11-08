@@ -1,0 +1,11 @@
+*
+!protocol/package.json
+!protocol/package-lock.json
+!protocol/src
+!web
+web/node_modules
+web/.svelte-kit
+web/build
+web/styled-system
+web/data
+web/Dockerfile

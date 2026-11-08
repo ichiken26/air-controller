@@ -1,0 +1,20 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    container_name: air-controller
+    restart: unless-stopped
+    ports:
+      # AIR_PORT: host port (if 3000 is taken). AIR_BIND=127.0.0.1: reachable only from the host
+      # itself, e.g. through `tailscale serve` (the app has no login of its own).
+      - "${AIR_BIND:-0.0.0.0}:${AIR_PORT:-3000}:3000"
+    environment:
+      # mDNS (aircontroller.local) does not resolve inside containers: use the IP.
+      ESPHOME_URL: ${ESPHOME_URL:-http://192.168.11.9}
+      TZ: Asia/Tokyo
+    volumes:
+      - air-data:/data
+
+volumes:
+  air-data:
